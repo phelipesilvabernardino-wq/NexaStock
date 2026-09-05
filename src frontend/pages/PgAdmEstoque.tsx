@@ -62,6 +62,205 @@ function PgAdmEstoque() {
 
     const [showNovoFornecedor, setShowNovoFornecedor] = useState(false);
 
+    const [showEditarFornecedor, setShowEditarFornecedor] = useState(false);
+
+    const [fornecedorEditando, setFornecedorEditando] = useState({
+    id: "",
+    nome: "",
+    cnpj: "",
+    contato: "",
+    email: "",
+    status: "sim",
+});
+
+    const handleEditarFornecedor = (fornecedor: any) => {
+        setFornecedorEditando({
+            id: String(fornecedor.id),
+            nome: fornecedor.nome || "",
+            cnpj: fornecedor.cnpj || "",
+            contato: fornecedor.contato || "",
+            email: fornecedor.email || "",
+            status: fornecedor.status ? "sim" : "nao",
+        });
+
+        setShowEditarFornecedor(true);
+};
+
+    const handleEditarFornecedorChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+) => {
+    const { name, value } = event.target;
+
+    setFornecedorEditando((prev) => ({
+        ...prev,
+        [name]: value,
+    }));
+};
+ 
+    const handleSalvarEdicaoFornecedor = async (
+    event: FormEvent<HTMLFormElement>
+) => {
+    event.preventDefault();
+
+    try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Token não encontrado. Faça login novamente.");
+            return;
+        }
+
+        const response = await fetch(
+            `http://localhost:3000/fornecedores/${fornecedorEditando.id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    nome: fornecedorEditando.nome,
+                    cnpj: fornecedorEditando.cnpj,
+                    contato: fornecedorEditando.contato,
+                    email: fornecedorEditando.email,
+                    status: fornecedorEditando.status === "sim",
+                }),
+            }
+        );
+
+        const data = await response.json();
+
+        console.log(
+            "STATUS EDITAR FORNECEDOR:",
+            response.status
+        );
+
+        console.log(
+            "RESPOSTA DO BACKEND:",
+            data
+        );
+
+        if (!response.ok) {
+            alert(
+                data.erro ||
+                data.error ||
+                JSON.stringify(data) ||
+                "Erro ao editar fornecedor."
+            );
+            return;
+        }
+
+        alert("Fornecedor atualizado com sucesso!");
+
+        setShowEditarFornecedor(false);
+
+        setFornecedorEditando({
+            id: "",
+            nome: "",
+            cnpj: "",
+            contato: "",
+            email: "",
+            status: "sim",
+        });
+
+        carregarFornecedores();
+
+    } catch (error) {
+        console.error(
+            "ERRO AO EDITAR FORNECEDOR:",
+            error
+        );
+
+        if (error instanceof Error) {
+            alert("ERRO: " + error.message);
+        } else {
+            alert("Erro desconhecido ao editar fornecedor.");
+        }
+    }
+};
+
+    const handleExcluirFornecedor = (fornecedor: any) => {
+    setFornecedorExcluindo({
+        id: String(fornecedor.id),
+        nome: fornecedor.nome,
+    });
+
+    setShowExcluirFornecedor(true);
+};
+
+    const confirmarExclusaoFornecedor = async () => {
+    try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Token não encontrado. Faça login novamente.");
+            return;
+        }
+
+        const response = await fetch(
+            `http://localhost:3000/fornecedores/${fornecedorExcluindo.id}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        const data = await response.json();
+
+        console.log(
+            "STATUS EXCLUIR FORNECEDOR:",
+            response.status
+        );
+
+        console.log(
+            "RESPOSTA DO BACKEND:",
+            data
+        );
+
+        if (!response.ok) {
+            alert(
+                data.erro ||
+                data.error ||
+                JSON.stringify(data) ||
+                "Erro ao excluir fornecedor."
+            );
+            return;
+        }
+
+        alert("Fornecedor excluído com sucesso!");
+
+        setShowExcluirFornecedor(false);
+
+        setFornecedorExcluindo({
+            id: "",
+            nome: "",
+        });
+
+        carregarFornecedores();
+
+    } catch (error) {
+        console.error(
+            "ERRO AO EXCLUIR FORNECEDOR:",
+            error
+        );
+
+        if (error instanceof Error) {
+            alert("ERRO: " + error.message);
+        } else {
+            alert("Erro desconhecido ao excluir fornecedor.");
+        }
+    }
+};
+
+const [showExcluirFornecedor, setShowExcluirFornecedor] = useState(false);
+
+const [fornecedorExcluindo, setFornecedorExcluindo] = useState({
+    id: "",
+    nome: "",
+});
+
     const [novoFornecedor, setNovoFornecedor] = useState({
         nome: "",
         cnpj: "",
@@ -2390,6 +2589,10 @@ function PgAdmEstoque() {
                                                 <th>
                                                     Status
                                                 </th>
+
+                                                <th>
+                                                    Ações
+                                                </th>
                                             </tr>
 
                                         </thead>
@@ -2438,6 +2641,22 @@ function PgAdmEstoque() {
                                                                     ? "Ativo"
                                                                     : "Não Ativo"}
                                                             </span>
+                                                        </td>
+
+                                                        <td>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleEditarFornecedor(fornecedor)}
+                                                            >
+                                                                Editar
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleExcluirFornecedor(fornecedor)}
+                                                            >
+                                                                Excluir
+                                                            </button>
                                                         </td>
 
                                                     </tr>
@@ -2828,7 +3047,7 @@ function PgAdmEstoque() {
 
                             </div>
 
-                            <form>
+                           <form onSubmit={handleSalvarEdicaoUsuario}>
 
                                 <div className="modal-body">
 
@@ -3548,6 +3767,119 @@ function PgAdmEstoque() {
                                 Excluir usuário
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showEditarFornecedor && (
+                
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowEditarFornecedor(false)}
+                >
+                    <div
+                        className="modal-novo-usuario"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h2>Editar fornecedor</h2>
+
+                        <form onSubmit={handleSalvarEdicaoFornecedor}>
+
+                            <input
+                                type="text"
+                                name="nome"
+                                placeholder="Nome"
+                                value={fornecedorEditando.nome}
+                                onChange={handleEditarFornecedorChange}
+                                required
+                            />
+
+                            <input
+                                type="text"
+                                name="cnpj"
+                                placeholder="CNPJ"
+                                value={fornecedorEditando.cnpj}
+                                onChange={handleEditarFornecedorChange}
+                                required
+                            />
+
+                            <input
+                                type="text"
+                                name="contato"
+                                placeholder="Contato"
+                                value={fornecedorEditando.contato}
+                                onChange={handleEditarFornecedorChange}
+                            />
+
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="E-mail"
+                                value={fornecedorEditando.email}
+                                onChange={handleEditarFornecedorChange}
+                            />
+
+                            <select
+                                name="status"
+                                value={fornecedorEditando.status}
+                                onChange={handleEditarFornecedorChange}
+                            >
+                                <option value="sim">Ativo</option>
+                                <option value="nao">Inativo</option>
+                            </select>
+
+                            <button
+                                type="submit"
+                                className="btn"
+                            >
+                                Salvar alterações
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowEditarFornecedor(false)}
+                            >
+                                Cancelar
+                            </button>
+
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {showExcluirFornecedor && (
+                
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowExcluirFornecedor(false)}
+                >
+                    <div
+                        className="modal-novo-usuario"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h2>Excluir fornecedor</h2>
+
+                        <p>
+                            Tem certeza que deseja excluir o fornecedor{" "}
+                            <strong>
+                                {fornecedorExcluindo.nome}
+                            </strong>?
+                        </p>
+
+                        <button
+                            type="button"
+                            className="btn"
+                            onClick={confirmarExclusaoFornecedor}
+                        >
+                            Sim, excluir
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowExcluirFornecedor(false)}
+                        >
+                            Cancelar
+                        </button>
                     </div>
                 </div>
             )}
