@@ -23,13 +23,14 @@ app.use('/movimentacao', movimentacaoRoutes);
 app.use('/estoque', estoqueRoutes);
 app.use('/login', loginRoutes);
 
-sequelize.sync()
+sequelize.authenticate()
     .then(() => {
-        console.log('PostgreSQL conectado e tabelas sincronizadas com Sequelize!');
+        console.log('PostgreSQL conectado com Sequelize!');
     })
     .catch((error) => {
         console.error('Erro ao conectar ao PostgreSQL:', error);
     });
+
 const PORT = 3000;
 
 app.listen(PORT, () => {
